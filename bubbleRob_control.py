@@ -4,8 +4,10 @@ class Jaco_arm_controller(object):
     def __init__(self):
         self.clientID = None
         self.joint_handles = []
-        self.step = 10
+        self.step = self.deg_to_rad(40)
         self.last_pos = []
+        return
+
     def set_up_connection(self):
         vrep.simxFinish(-1) # just in case, close all opened connections
         self.clientID=vrep.simxStart('127.0.0.1',19999,True,True,5000,5) # start a connection
@@ -25,6 +27,7 @@ class Jaco_arm_controller(object):
         return
 
     def set_up_joints_handles(self):
+
         err_code1, joint_handle1 = vrep.simxGetObjectHandle(
                                         self.clientID,
                                         "Jaco_joint1",
@@ -52,12 +55,15 @@ class Jaco_arm_controller(object):
         self.joint_handles = [joint_handle1,
                               joint_handle2,
                               joint_handle3,
-                              joint_handle3,
                               joint_handle4,
                               joint_handle5,
                               joint_handle6]
         for i in range(6):
-            self.last_pos.append(0)
+            err_code, last_pos = vrep.simxGetJointPosition(
+                                    self.clientID,
+                                    self.joint_handles[i],
+                                    vrep.simx_opmode_streaming)
+            self.last_pos.append(last_pos)
         return
 
     def deg_to_rad(self, deg):
@@ -72,8 +78,11 @@ class Jaco_arm_controller(object):
                         self.deg_to_rad(self.last_pos[joint_num]+self.step),
                         vrep.simx_opmode_streaming)
         self.last_pos[joint_num] +=self.step
-
-        print(self.last_pos[joint_num]+self.step)
+        if self.last_pos[joint_num] > 360 :
+            self.last_pos[joint_num] = 0
+        elif self.last_pos[joint_num] < 0 :
+            self.last_pos[joint_num] = 360
+        print(self.last_pos[joint_num])
 
     def decrease_joint_deg(self, joint_num):
         err_code = vrep.simxSetJointTargetPosition(
@@ -82,5 +91,9 @@ class Jaco_arm_controller(object):
                         self.deg_to_rad(self.last_pos[joint_num-1]-self.step),
                         vrep.simx_opmode_streaming)
         self.last_pos[joint_num] -=self.step
+        if self.last_pos[joint_num] > 360 :
+            self.last_pos[joint_num] = 0
+        elif self.last_pos[joint_num] < 0 :
+            self.last_pos[joint_num] = 360
         print(joint_num)
-        print(self.last_pos[joint_num]+self.step)
+        print(self.last_pos[joint_num])
