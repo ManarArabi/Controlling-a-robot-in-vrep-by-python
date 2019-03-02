@@ -1,5 +1,5 @@
 import tkinter as tk
-from  bubbleRob_control import Jaco_arm_controller
+from  JacoArm_control import Jaco_arm_controller
 
 def set_arrows_up(arrow_up ,main_window, controller):
     j_arrows_up = []
